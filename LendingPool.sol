@@ -16,7 +16,6 @@ interface IERC20 {
  * @dev Deployed native on Arc Network focusing on stablecoin capital efficiency.
  */
 contract LendingPool {
-    
     // --- Custom Errors (Gas Optimized) ---
     error ZeroAmountNotAllowed();
     error TokenNotSupported();
@@ -33,15 +32,15 @@ contract LendingPool {
     // --- State Variables ---
     address public owner;
     address[] public trackedAssets; // Stores all whitelisted tokens for health factor calculation
-    
+
     // Supported Assets: Asset Address => Supported status
     mapping(address => bool) public isAssetSupported;
-    
+
     // User Positions: User => Asset => Position Details
     mapping(address => mapping(address => UserPosition)) public userPositions;
 
     // Collateral Factor (e.g., 80% LTV = 8000)
-    uint256 public constant COLLATERAL_FACTOR = 8000; 
+    uint256 public constant COLLATERAL_FACTOR = 8000;
     uint256 public constant BPS_DIVIDER = 10000;
 
     // --- Events ---
@@ -56,7 +55,7 @@ contract LendingPool {
     }
 
     modifier onlySupportedAsset(address asset) {
-        if (!isAssetSupported[asset]) revert(TokenNotSupported());
+        if (!isAssetSupported[asset]) revert TokenNotSupported();
         _;
     }
 
@@ -81,13 +80,11 @@ contract LendingPool {
      * @param amount The amount to supply
      */
     function supply(address asset, uint256 amount) external onlySupportedAsset(asset) {
-        if (amount == 0) revert(ZeroAmountNotAllowed());
-
+        if (amount == 0) revert ZeroAmountNotAllowed();
         userPositions[msg.sender][asset].suppliedBalance += amount;
         emit Supply(msg.sender, asset, amount);
-
         bool success = IERC20(asset).transferFrom(msg.sender, address(this), amount);
-        if (!success) revert(TransferFailed());
+        if (!success) revert TransferFailed();
     }
 
     /**
@@ -96,18 +93,16 @@ contract LendingPool {
      * @param amount The amount to withdraw
      */
     function withdraw(address asset, uint256 amount) external onlySupportedAsset(asset) {
-        if (amount == 0) revert(ZeroAmountNotAllowed());
-        if (userPositions[msg.sender][asset].suppliedBalance < amount) revert(InsufficientCollateral());
-
+        if (amount == 0) revert ZeroAmountNotAllowed();
+        if (userPositions[msg.sender][asset].suppliedBalance < amount) revert InsufficientCollateral();
         userPositions[msg.sender][asset].suppliedBalance -= amount;
 
         // Check if the user's position remains safe after withdrawal across all assets
-        if (getHealthFactor(msg.sender) < 1e18) revert(HealthFactorTooLow());
+        if (getHealthFactor(msg.sender) < 1e18) revert HealthFactorTooLow();
 
         emit Withdraw(msg.sender, asset, amount);
-
         bool success = IERC20(asset).transfer(msg.sender, amount);
-        if (!success) revert(TransferFailed());
+        if (!success) revert TransferFailed();
     }
 
     /**
@@ -116,17 +111,15 @@ contract LendingPool {
      * @param amount The amount to borrow
      */
     function borrow(address asset, uint256 amount) external onlySupportedAsset(asset) {
-        if (amount == 0) revert(ZeroAmountNotAllowed());
-
+        if (amount == 0) revert ZeroAmountNotAllowed();
         userPositions[msg.sender][asset].borrowedBalance += amount;
 
         // Validate that borrowing this amount doesn't breach LTV bounds
-        if (getHealthFactor(msg.sender) < 1e18) revert(HealthFactorTooLow());
+        if (getHealthFactor(msg.sender) < 1e18) revert HealthFactorTooLow();
 
         emit Borrow(msg.sender, asset, amount);
-
         bool success = IERC20(asset).transfer(msg.sender, amount);
-        if (!success) revert(TransferFailed());
+        if (!success) revert TransferFailed();
     }
 
     /**
@@ -135,20 +128,18 @@ contract LendingPool {
      * @param amount The amount to repay
      */
     function repay(address asset, uint256 amount) external onlySupportedAsset(asset) {
-        if (amount == 0) revert(ZeroAmountNotAllowed());
-        
+        if (amount == 0) revert ZeroAmountNotAllowed();
         uint256 userDebt = userPositions[msg.sender][asset].borrowedBalance;
         uint256 repayAmount = amount > userDebt ? userDebt : amount;
-
         userPositions[msg.sender][asset].borrowedBalance -= repayAmount;
-        emit Repay(msg.sender, asset, repayAmount);
 
+        emit Repay(msg.sender, asset, repayAmount);
         bool success = IERC20(asset).transferFrom(msg.sender, address(this), repayAmount);
-        if (!success) revert(TransferFailed());
+        if (!success) revert TransferFailed();
     }
 
     /**
-     * @notice Calculates the aggregate Health Factor of a user across all supported assets. 
+     * @notice Calculates the aggregate Health Factor of a user across all supported assets.
      * @dev Value >= 1e18 means safe. Below 1e18 means open for liquidation.
      * @param user The address of the protocol user
      * @return The health factor scaled by 1e18
@@ -165,7 +156,6 @@ contract LendingPool {
         }
 
         if (totalBorrowedValue == 0) return 100e18; // Complete safe factor if no debt exists
-
         uint256 collateralAdjustedValue = (totalCollateralValue * COLLATERAL_FACTOR) / BPS_DIVIDER;
         return (collateralAdjustedValue * 1e18) / totalBorrowedValue;
     }
