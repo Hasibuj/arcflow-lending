@@ -10,7 +10,6 @@
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
 <body class="bg-[#0F141C] text-white font-sans antialiased">
-
     <div class="flex h-screen">
         <!-- 📌 SIDEBAR -->
         <div class="w-64 bg-[#161B22] border-r border-gray-800 p-6 flex flex-col justify-between">
@@ -52,25 +51,27 @@
                     <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl flex justify-between items-center">
                         <div>
                             <p class="text-xs text-gray-400 uppercase tracking-wider">Total Value Locked (TVL)</p>
-                            <h3 class="text-3xl font-bold mt-1">$12.4M</h3>
+                            <h3 id="tvlDisplay" class="text-3xl font-bold mt-1">$0.00</h3>
                         </div>
                         <span class="text-2xl text-[#00D2C4]">📈</span>
                     </div>
+
                     <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
                         <div class="flex justify-between">
                             <p class="text-xs text-gray-400 uppercase tracking-wider">Available Liquidity</p>
-                            <span class="text-xs text-[#00D2C4]">75% Full</span>
+                            <span id="liqPercent" class="text-xs text-[#00D2C4]">0% Full</span>
                         </div>
-                        <h3 class="text-3xl font-bold mt-1">$9.3M</h3>
+                        <h3 id="liquidityDisplay" class="text-3xl font-bold mt-1">$0.00</h3>
                         <div class="w-full bg-gray-800 h-2 rounded-full mt-3 overflow-hidden">
-                            <div class="bg-[#00D2C4] h-full" style="width: 75%"></div>
+                            <div id="liqBar" class="bg-[#00D2C4] h-full" style="width: 0%"></div>
                         </div>
                     </div>
+
                     <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
                         <p class="text-xs text-gray-400 uppercase tracking-wider">Active Borrows</p>
-                        <h3 class="text-3xl font-bold mt-1">$3.1M</h3>
+                        <h3 id="borrowsDisplay" class="text-3xl font-bold mt-1">$0.00</h3>
                         <div class="w-full bg-gray-800 h-2 rounded-full mt-3 overflow-hidden">
-                            <div class="bg-blue-500 h-full" style="width: 25%"></div>
+                            <div id="borrowBar" class="bg-blue-500 h-full" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -109,11 +110,9 @@
                         
                         <!-- Input Fields -->
                         <div class="space-y-3">
-                            <div>
-                                <label class="text-xs text-gray-400">Token Address (Auto-filled)</label>
-                                <!-- এখানে value এর ভেতর তোমার টোকেন অ্যাড্রেসটি ডিফল্ট করে দেওয়া হয়েছে -->
-                                <input id="tokenAddress" type="text" value="0x3600000000000000000000000000000000000000" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00D2C4]">
-                            </div>
+                            <!-- টোকেন অ্যাড্রেসটি ইনপুট ফিল্ড থেকে লুকিয়ে (hidden) রাখা হয়েছে -->
+                            <input id="tokenAddress" type="hidden" value="0x3600000000000000000000000000000000000000">
+                            
                             <div>
                                 <label class="text-xs text-gray-400">Amount</label>
                                 <input id="actionAmount" type="number" placeholder="0.0" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00D2C4]">
@@ -146,9 +145,8 @@
         let provider;
         let signer;
         let contract;
+        const contractAddress = "0x46fD94DD6166903D038Ae1b8231Ea8c22209C84B";
 
-        const contractAddress = "0x46fD94DD6166903D038Ae1b8231Ea8c22209C84B"; 
-        
         // Lending Pool Contract ABI
         const contractABI = [
             "function supply(address token, uint256 amount) external",
@@ -174,7 +172,7 @@
                     document.getElementById('connectBtn').innerText = address.substring(0,6) + "..." + address.substring(38);
                     document.getElementById('connectBtn').classList.replace('bg-[#00D2C4]', 'bg-gray-800');
                     document.getElementById('connectBtn').classList.add('text-gray-300');
-
+                    
                     contract = new ethers.Contract(contractAddress, contractABI, signer);
                     updateUserBalances(address);
                 } catch (error) {
@@ -187,26 +185,56 @@
 
         async function updateUserBalances(userAddress) {
             if (!contract) return;
-            const tokenAddr = document.getElementById('tokenAddress').value; 
+            const tokenAddr = document.getElementById('tokenAddress').value;
+            
             try {
+                // ১. ব্লকচেইন থেকে ইউজারের লাইভ ডাটা রিড করা
                 const position = await contract.positions(userAddress, tokenAddr);
-                document.getElementById('userSupplied').innerText = ethers.utils.formatEther(position.supplied) + " Token";
-                document.getElementById('userBorrowed').innerText = ethers.utils.formatEther(position.borrowed) + " Token";
+                const suppliedEth = ethers.utils.formatEther(position.supplied);
+                const borrowedEth = ethers.utils.formatEther(position.borrowed);
+                
+                // পোর্টফোলিও আপডেট
+                document.getElementById('userSupplied').innerText = parseFloat(suppliedEth).toFixed(4) + " Token";
+                document.getElementById('userBorrowed').innerText = parseFloat(borrowedEth).toFixed(4) + " Token";
+                
+                // ২. গ্লোবাল ড্যাশবোর্ড ডাটা আপডেট (Real-time Calculation)
+                // যদি তোমার স্মার্ট কন্ট্রাক্টে টোটাল পুলেল গ্লোবাল ফাংশন না থাকে, তবে ইউজারের পজিশনের ভিত্তিতে লাইভ ভ্যালু জেনারেট হবে।
+                const tokenPrice = 10; // ১টি টেস্ট টোকেন = ১০ ডলার (প্রয়োজন অনুযায়ী পরিবর্তন করতে পারো)
+                
+                const tvlUSD = parseFloat(suppliedEth) * tokenPrice;
+                const borrowsUSD = parseFloat(borrowedEth) * tokenPrice;
+                const liquidityUSD = tvlUSD - borrowsUSD;
+                
+                // ড্যাশবোর্ডের টেক্সট আপডেট
+                document.getElementById('tvlDisplay').innerText = `$${tvlUSD.toFixed(2)}`;
+                document.getElementById('borrowsDisplay').innerText = `$${borrowsUSD.toFixed(2)}`;
+                document.getElementById('liquidityDisplay').innerText = `$${liquidityUSD > 0 ? liquidityUSD.toFixed(2) : '0.00'}`;
+                
+                // প্রোগ্রেস বার এবং পার্সেন্টেজ ক্যালকুলেশন
+                let liqPercent = 0;
+                let borrowPercent = 0;
+                if (tvlUSD > 0) {
+                    liqPercent = Math.round((liquidityUSD / tvlUSD) * 100);
+                    borrowPercent = Math.round((borrowsUSD / tvlUSD) * 100);
+                }
+                
+                document.getElementById('liqPercent').innerText = `${liqPercent}% Full`;
+                document.getElementById('liqBar').style.width = `${liqPercent}%`;
+                document.getElementById('borrowBar').style.width = `${borrowPercent}%`;
+                
             } catch (err) {
-                console.log("Could not fetch balances.");
+                console.error("Could not fetch balances from blockchain:", err);
             }
         }
 
         async function executeAction(actionType) {
             if (!contract) return alert("Please connect wallet first!");
-            
             const token = document.getElementById('tokenAddress').value;
             const amountInput = document.getElementById('actionAmount').value;
             
             if (!token || !amountInput) return alert("Please enter Amount.");
-            
             const amount = ethers.utils.parseEther(amountInput);
-
+            
             try {
                 // ⚡ AUTOMATIC ERC20 APPROVAL STEP FOR SUPPLY AND REPAY
                 if (actionType === 'supply' || actionType === 'repay') {
@@ -216,19 +244,22 @@
                     await approveTx.wait();
                     alert("Approve সফল হয়েছে! এবার আসল ট্রানজেকশনটি সাবমিট হচ্ছে, মেটামাস্ক চেক করো...");
                 }
-
+                
                 let tx;
                 if (actionType === 'supply') tx = await contract.supply(token, amount);
                 if (actionType === 'withdraw') tx = await contract.withdraw(token, amount);
                 if (actionType === 'borrow') tx = await contract.borrow(token, amount);
                 if (actionType === 'repay') tx = await contract.repay(token, amount);
-
+                
                 alert(`Transaction submitted! Hash: ${tx.hash}`);
                 await tx.wait();
                 alert("Transaction Confirmed! 🎉");
                 
+                // ট্রানজেকশন সফল হলে ডাটা ইনস্ট্যান্ট রিলোড হবে
                 const address = await signer.getAddress();
                 updateUserBalances(address);
+                document.getElementById('actionAmount').value = ''; // ইনপুট বক্স ক্লিয়ার
+                
             } catch (error) {
                 console.error("Transaction failed", error);
                 alert(`Error: ${error.data ? error.data.message : error.message}`);
