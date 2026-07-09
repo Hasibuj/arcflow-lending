@@ -110,12 +110,10 @@
                         
                         <!-- Input Fields -->
                         <div class="space-y-3">
-                            <!-- টোকেন অ্যাড্রেসটি ইনপুট ফিল্ড থেকে লুকিয়ে (hidden) রাখা হয়েছে -->
                             <input id="tokenAddress" type="hidden" value="0x3600000000000000000000000000000000000000">
-                            
                             <div>
                                 <label class="text-xs text-gray-400">Amount</label>
-                                <input id="actionAmount" type="number" placeholder="0.0" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00D2C4]">
+                                <input id="actionAmount" type="number" step="any" placeholder="0.0" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00D2C4]">
                             </div>
                         </div>
 
@@ -147,7 +145,6 @@
         let contract;
         const contractAddress = "0x46fD94DD6166903D038Ae1b8231Ea8c22209C84B";
 
-        // Lending Pool Contract ABI
         const contractABI = [
             "function supply(address token, uint256 amount) external",
             "function withdraw(address token, uint256 amount) external",
@@ -156,7 +153,6 @@
             "function positions(address, address) view returns (uint256 supplied, uint256 borrowed)"
         ];
 
-        // Standard ERC20 ABI for Token Approval
         const erc20ABI = [
             "function approve(address spender, uint256 amount) external returns (bool)"
         ];
@@ -188,29 +184,22 @@
             const tokenAddr = document.getElementById('tokenAddress').value;
             
             try {
-                // ১. ব্লকচেইন থেকে ইউজারের লাইভ ডাটা রিড করা
                 const position = await contract.positions(userAddress, tokenAddr);
                 const suppliedEth = ethers.utils.formatEther(position.supplied);
                 const borrowedEth = ethers.utils.formatEther(position.borrowed);
                 
-                // পোর্টফোলিও আপডেট
                 document.getElementById('userSupplied').innerText = parseFloat(suppliedEth).toFixed(4) + " Token";
                 document.getElementById('userBorrowed').innerText = parseFloat(borrowedEth).toFixed(4) + " Token";
                 
-                // ২. গ্লোবাল ড্যাশবোর্ড ডাটা আপডেট (Real-time Calculation)
-                // যদি তোমার স্মার্ট কন্ট্রাক্টে টোটাল পুলেল গ্লোবাল ফাংশন না থাকে, তবে ইউজারের পজিশনের ভিত্তিতে লাইভ ভ্যালু জেনারেট হবে।
-                const tokenPrice = 10; // ১টি টেস্ট টোকেন = ১০ ডলার (প্রয়োজন অনুযায়ী পরিবর্তন করতে পারো)
-                
+                const tokenPrice = 10; 
                 const tvlUSD = parseFloat(suppliedEth) * tokenPrice;
                 const borrowsUSD = parseFloat(borrowedEth) * tokenPrice;
                 const liquidityUSD = tvlUSD - borrowsUSD;
                 
-                // ড্যাশবোর্ডের টেক্সট আপডেট
                 document.getElementById('tvlDisplay').innerText = `$${tvlUSD.toFixed(2)}`;
                 document.getElementById('borrowsDisplay').innerText = `$${borrowsUSD.toFixed(2)}`;
                 document.getElementById('liquidityDisplay').innerText = `$${liquidityUSD > 0 ? liquidityUSD.toFixed(2) : '0.00'}`;
                 
-                // প্রোগ্রেস বার এবং পার্সেন্টেজ ক্যালকুলেশন
                 let liqPercent = 0;
                 let borrowPercent = 0;
                 if (tvlUSD > 0) {
@@ -232,37 +221,56 @@
             const token = document.getElementById('tokenAddress').value;
             const amountInput = document.getElementById('actionAmount').value;
             
-            if (!token || !amountInput) return alert("Please enter Amount.");
-            const amount = ethers.utils.parseEther(amountInput);
+            if (!token || !amountInput || parseFloat(amountInput) <= 0) {
+                return alert("Please enter a valid Amount.");
+            }
+            
+            // সাইন ফিক্সিং এবং সেইফ চেইন ডেটা কনভার্সন
+            const amount = ethers.utils.parseEther(parseFloat(amountInput).toString());
             
             try {
-                // ⚡ AUTOMATIC ERC20 APPROVAL STEP FOR SUPPLY AND REPAY
+                // ১. APPROVE STEP (অনুমতি নেওয়ার ধাপ)
                 if (actionType === 'supply' || actionType === 'repay') {
                     const tokenContract = new ethers.Contract(token, erc20ABI, signer);
-                    alert("টোকেন ট্রান্সফারের অনুমতি দেওয়া হচ্ছে। প্রথমে মেটামাস্ক পপ-আপে Approve কনফার্ম করো...");
+                    console.log("Approving token spend...");
+                    
                     const approveTx = await tokenContract.approve(contractAddress, amount);
+                    alert("Approve সাবমিট হয়েছে। ব্লকচেইনে কনফার্ম হওয়া পর্যন্ত অপেক্ষা করুন...");
                     await approveTx.wait();
-                    alert("Approve সফল হয়েছে! এবার আসল ট্রানজেকশনটি সাবমিট হচ্ছে, মেটামাস্ক চেক করো...");
+                    console.log("Approve Confirmed!");
+                    
+                    // মেটামাস্ককে প্রিপেয়ার করার জন্য ১ সেকেন্ডের একটি ছোট বিরতি
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
                 
+                // ২. EXECUTE MAIN TRANSACTION STEP (আসল মেথড রান করার ধাপ)
                 let tx;
-                if (actionType === 'supply') tx = await contract.supply(token, amount);
-                if (actionType === 'withdraw') tx = await contract.withdraw(token, amount);
-                if (actionType === 'borrow') tx = await contract.borrow(token, amount);
-                if (actionType === 'repay') tx = await contract.repay(token, amount);
+                alert(`এখন আসল ${actionType.toUpperCase()} ট্রানজেকশনটি শুরু হচ্ছে। মেটামাস্ক পপ-আপ চেক করুন...`);
                 
-                alert(`Transaction submitted! Hash: ${tx.hash}`);
-                await tx.wait();
-                alert("Transaction Confirmed! 🎉");
+                if (actionType === 'supply') {
+                    tx = await contract.supply(token, amount, { gasLimit: 250000 });
+                } else if (actionType === 'withdraw') {
+                    tx = await contract.withdraw(token, amount, { gasLimit: 250000 });
+                } else if (actionType === 'borrow') {
+                    tx = await contract.borrow(token, amount, { gasLimit: 250000 });
+                } else if (actionType === 'repay') {
+                    tx = await contract.repay(token, amount, { gasLimit: 250000 });
+                }
                 
-                // ট্রানজেকশন সফল হলে ডাটা ইনস্ট্যান্ট রিলোড হবে
-                const address = await signer.getAddress();
-                updateUserBalances(address);
-                document.getElementById('actionAmount').value = ''; // ইনপুট বক্স ক্লিয়ার
+                if(tx) {
+                    alert(`ট্রানজেকশন সাবমিট হয়েছে! Hash: ${tx.hash}\nকনফার্মেশনের জন্য অপেক্ষা করুন...`);
+                    await tx.wait();
+                    alert(`${actionType.toUpperCase()} সফল হয়েছে! 🎉`);
+                    
+                    // পোর্টফোলিও আপডেট
+                    const address = await signer.getAddress();
+                    updateUserBalances(address);
+                    document.getElementById('actionAmount').value = ''; 
+                }
                 
             } catch (error) {
-                console.error("Transaction failed", error);
-                alert(`Error: ${error.data ? error.data.message : error.message}`);
+                console.error("Action execution failed:", error);
+                alert(`Transaction failed! ${error.data ? error.data.message : error.message}`);
             }
         }
     </script>
