@@ -18,15 +18,15 @@
                     ARCFLOW <span class="text-white font-light">LENDING</span>
                 </div>
                 <nav class="space-y-4">
-                    <a href="#" class="flex items-center space-x-3 px-4 py-2.5 bg-[#1A212D] text-[#00D2C4] rounded-lg font-medium transition">
+                    <button id="dashboardTab" onclick="showSection('dashboard')" class="flex items-center space-x-3 px-4 py-2.5 bg-[#1A212D] text-[#00D2C4] rounded-lg font-medium transition w-full text-left">
                         <span>📊</span> <span>Dashboard</span>
-                    </a>
-                    <a href="#" class="flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-[#1A212D] hover:text-white rounded-lg transition">
+                    </button>
+                    <button id="positionsTab" onclick="showSection('positions')" class="flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-[#1A212D] hover:text-white rounded-lg transition w-full text-left">
                         <span>💼</span> <span>Positions</span>
-                    </a>
-                    <a href="#" class="flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-[#1A212D] hover:text-white rounded-lg transition">
+                    </button>
+                    <button id="tokenTab" onclick="showSection('token')" class="flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-[#1A212D] hover:text-white rounded-lg transition w-full text-left">
                         <span>⚙️</span> <span>Token Management</span>
-                    </a>
+                    </button>
                 </nav>
             </div>
             <div class="text-xs text-gray-500 text-center border-t border-gray-800 pt-4">
@@ -44,8 +44,8 @@
                 </button>
             </header>
 
-            <!-- DASHBOARD BODY -->
-            <main class="p-8 space-y-8">
+            <!-- 📊 DASHBOARD SECTION -->
+            <main id="dashboardSection" class="p-8 space-y-8">
                 <!-- 📦 TOP METRIC CARDS -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl flex justify-between items-center">
@@ -76,9 +76,8 @@
                     </div>
                 </div>
 
-                <!-- 📊 PORTFOLIO & QUICK ACTIONS GRID -->
+                <!-- PORTFOLIO & QUICK ACTIONS -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- User Positions Table -->
                     <div class="lg:col-span-2 bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
                         <h3 class="text-lg font-semibold mb-4 text-gray-200">Your Portfolio (User Positions)</h3>
                         <div class="overflow-x-auto">
@@ -94,7 +93,7 @@
                                     <tr>
                                         <td class="py-3.5 font-medium flex items-center space-x-2">
                                             <span class="bg-blue-900/40 text-blue-400 p-1 rounded-full text-xs">USDC</span>
-                                            <span>Test USDC</span>
+                                            <span id="assetNameDisplay">Test USDC</span>
                                         </td>
                                         <td id="userSupplied" class="py-3.5">0.0000 USDC</td>
                                         <td id="userBorrowed" class="py-3.5 text-gray-400">0.0000 USDC</td>
@@ -104,34 +103,53 @@
                         </div>
                     </div>
 
-                    <!-- ⚡ QUICK ACTIONS PANEL -->
                     <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl space-y-4">
                         <h3 class="text-lg font-semibold text-gray-200">Quick Actions Panel</h3>
-                        
-                        <!-- Input Fields -->
                         <div class="space-y-3">
-                            <input id="tokenAddress" type="hidden" value="0x3600000000000000000000000000000000000000">
                             <div>
                                 <label class="text-xs text-gray-400">Amount</label>
                                 <input id="actionAmount" type="number" step="any" placeholder="0.0" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00D2C4]">
                             </div>
                         </div>
-
-                        <!-- Action Grid Buttons -->
                         <div class="grid grid-cols-2 gap-3 pt-2">
-                            <button onclick="executeAction('supply')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">
-                                ↓ SUPPLY
-                            </button>
-                            <button onclick="executeAction('withdraw')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">
-                                ↑ WITHDRAW
-                            </button>
-                            <button onclick="executeAction('borrow')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">
-                                ↗ BORROW
-                            </button>
-                            <button onclick="executeAction('repay')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">
-                                ✓ REPAY
-                            </button>
+                            <button onclick="executeAction('supply')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">↓ SUPPLY</button>
+                            <button onclick="executeAction('withdraw')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">↑ WITHDRAW</button>
+                            <button onclick="executeAction('borrow')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">↗ BORROW</button>
+                            <button onclick="executeAction('repay')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">✓ REPAY</button>
                         </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 💼 POSITIONS SECTION (HIDDEN BY DEFAULT) -->
+            <main id="positionsSection" class="p-8 space-y-8 hidden">
+                <h2 class="text-2xl font-bold text-gray-200">Detailed User Positions & Risk Management</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider">Account Health Factor</p>
+                        <h3 id="healthFactorDisplay" class="text-3xl font-bold mt-1 text-green-400">∞</h3>
+                        <p class="text-xs text-gray-500 mt-2">Liquidation occurs if Health Factor drops below 1.0</p>
+                    </div>
+                    <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider">Max Borrow Limit (80% Collateral)</p>
+                        <h3 id="borrowLimitDisplay" class="text-3xl font-bold mt-1">$0.00</h3>
+                    </div>
+                </div>
+            </main>
+
+            <!-- ⚙️ TOKEN MANAGEMENT SECTION (HIDDEN BY DEFAULT) -->
+            <main id="tokenSection" class="p-8 space-y-8 hidden">
+                <h2 class="text-2xl font-bold text-gray-200">Token Configuration Management</h2>
+                <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl max-w-2xl">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-300">Active Token Settings</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1">Target ERC20 Token Address (6 Decimals Supported)</label>
+                            <input id="tokenAddress" type="text" value="0x3600000000000000000000000000000000000000" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-[#00D2C4]">
+                        </div>
+                        <button onclick="handleTokenUpdate()" class="bg-[#00D2C4] hover:bg-[#00b0a4] text-[#0F141C] font-semibold px-4 py-2 rounded-lg text-sm transition">
+                            Update & Refresh Pool Data
+                        </button>
                     </div>
                 </div>
             </main>
@@ -157,6 +175,25 @@
             "function approve(address spender, uint256 amount) external returns (bool)"
         ];
 
+        // 🔄 TAB SWITCHING LOGIC
+        function showSection(sectionId) {
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('positionsSection').classList.add('hidden');
+            document.getElementById('tokenSection').classList.add('hidden');
+            
+            document.getElementById(sectionId + 'Section').classList.remove('hidden');
+            
+            const tabs = ['dashboard', 'positions', 'token'];
+            tabs.forEach(tab => {
+                const btn = document.getElementById(tab + 'Tab');
+                if (tab === sectionId) {
+                    btn.className = "flex items-center space-x-3 px-4 py-2.5 bg-[#1A212D] text-[#00D2C4] rounded-lg font-medium transition w-full text-left";
+                } else {
+                    btn.className = "flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-[#1A212D] hover:text-white rounded-lg transition w-full text-left";
+                }
+            });
+        }
+
         async function connectWallet() {
             if (window.ethereum) {
                 try {
@@ -179,6 +216,14 @@
             }
         }
 
+        async function handleTokenUpdate() {
+            if(!signer) return alert("Please connect wallet first.");
+            const address = await signer.getAddress();
+            updateUserBalances(address);
+            alert("Token tracking address updated successfully!");
+            showSection('dashboard');
+        }
+
         async function updateUserBalances(userAddress) {
             if (!contract) return;
             const tokenAddr = document.getElementById('tokenAddress').value;
@@ -186,14 +231,12 @@
             try {
                 const position = await contract.positions(userAddress, tokenAddr);
                 
-                // FIXED: 6 Decimals for USDC
                 const suppliedEth = ethers.utils.formatUnits(position.supplied, 6);
                 const borrowedEth = ethers.utils.formatUnits(position.borrowed, 6);
                 
                 document.getElementById('userSupplied').innerText = parseFloat(suppliedEth).toFixed(4) + " USDC";
                 document.getElementById('userBorrowed').innerText = parseFloat(borrowedEth).toFixed(4) + " USDC";
                 
-                // USDC Price is exactly $1
                 const tokenPrice = 1; 
                 const tvlUSD = parseFloat(suppliedEth) * tokenPrice;
                 const borrowsUSD = parseFloat(borrowedEth) * tokenPrice;
@@ -213,6 +256,26 @@
                 document.getElementById('liqPercent').innerText = `${liqPercent}% Full`;
                 document.getElementById('liqBar').style.width = `${liqPercent}%`;
                 document.getElementById('borrowBar').style.width = `${borrowPercent}%`;
+
+                // 📈 POSITIONS RISK MANAGEMENT CALCULATIONS (80% LTV)
+                const maxBorrowLimit = tvlUSD * 0.8;
+                document.getElementById('borrowLimitDisplay').innerText = `$${maxBorrowLimit.toFixed(2)}`;
+
+                const healthDisplay = document.getElementById('healthFactorDisplay');
+                if (borrowsUSD > 0) {
+                    const healthFactor = maxBorrowLimit / borrowsUSD;
+                    healthDisplay.innerText = healthFactor.toFixed(2);
+                    if (healthFactor < 1.1) {
+                        healthDisplay.className = "text-3xl font-bold mt-1 text-red-500";
+                    } else if (healthFactor < 1.5) {
+                        healthDisplay.className = "text-3xl font-bold mt-1 text-yellow-500";
+                    } else {
+                        healthDisplay.className = "text-3xl font-bold mt-1 text-green-400";
+                    }
+                } else {
+                    healthDisplay.innerText = "∞";
+                    healthDisplay.className = "text-3xl font-bold mt-1 text-green-400";
+                }
                 
             } catch (err) {
                 console.error("Could not fetch balances from blockchain:", err);
@@ -228,16 +291,13 @@
                 return alert("Please enter a valid Amount.");
             }
             
-            // FIXED: parseUnits for 6 Decimals (USDC)
             const amount = ethers.utils.parseUnits(parseFloat(amountInput).toString(), 6);
             
             try {
-                // 1. APPROVE STEP
                 if (actionType === 'supply' || actionType === 'repay') {
                     const tokenContract = new ethers.Contract(token, erc20ABI, signer);
                     console.log("Approving token spend...");
                     
-                    // Gas limit removed so MetaMask auto-estimates it
                     const approveTx = await tokenContract.approve(contractAddress, amount);
                     alert("Approval submitted. Please wait for confirmation on blockchain...");
                     await approveTx.wait();
@@ -246,7 +306,6 @@
                     await new Promise(resolve => setTimeout(resolve, 1500));
                 }
                 
-                // 2. EXECUTE MAIN TRANSACTION STEP
                 let tx;
                 alert(`Initiating ${actionType.toUpperCase()} transaction. Please check MetaMask popup...`);
                 
@@ -272,14 +331,12 @@
                 
             } catch (error) {
                 console.error("Action execution failed:", error);
-                
                 let reason = error.message;
                 if (error.data && error.data.message) {
                     reason = error.data.message;
                 } else if (error.reason) {
                     reason = error.reason;
                 }
-                
                 alert(`Transaction Failed! Reason: ${reason}`);
             }
         }
