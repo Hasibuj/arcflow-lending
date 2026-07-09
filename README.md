@@ -4,6 +4,13 @@ A protocol-native lending and borrowing platform built specifically for **Arc Ne
 
 ---
 
+## 🚀 Deployment Information
+
+*   **Network:** Arc Network Testnet (Chain ID: `5042002`)
+*   **LendingPool Contract Address:** `0x46fD94DD6166903D038Ae1b8231Ea8c22209C84B`
+
+---
+
 ## 🚀 Features
 
 *   **Supply & Earn:** Users can supply supported ERC20 tokens to the pool and earn protocol native interest or rewards (based on logic).
