@@ -233,7 +233,8 @@
                     const tokenContract = new ethers.Contract(token, erc20ABI, signer);
                     console.log("Approving token spend...");
                     
-                    const approveTx = await tokenContract.approve(contractAddress, amount, { gasLimit: 100000 });
+                    // Gas limit removed so MetaMask calculates gas correctly
+                    const approveTx = await tokenContract.approve(contractAddress, amount);
                     alert("Approval submitted. Please wait for confirmation on blockchain...");
                     await approveTx.wait();
                     console.log("Approve Confirmed!");
@@ -245,16 +246,14 @@
                 let tx;
                 alert(`Initiating ${actionType.toUpperCase()} transaction. Please check MetaMask popup...`);
                 
-                const txOptions = { gasLimit: 500000 }; 
-                
                 if (actionType === 'supply') {
-                    tx = await contract.supply(token, amount, txOptions);
+                    tx = await contract.supply(token, amount);
                 } else if (actionType === 'withdraw') {
-                    tx = await contract.withdraw(token, amount, txOptions);
+                    tx = await contract.withdraw(token, amount);
                 } else if (actionType === 'borrow') {
-                    tx = await contract.borrow(token, amount, txOptions);
+                    tx = await contract.borrow(token, amount);
                 } else if (actionType === 'repay') {
-                    tx = await contract.repay(token, amount, txOptions);
+                    tx = await contract.repay(token, amount);
                 }
                 
                 if(tx) {
