@@ -225,44 +225,43 @@
                 return alert("Please enter a valid Amount.");
             }
             
-            // সাইন ফিক্সিং এবং সেইফ চেইন ডেটা কনভার্সন
             const amount = ethers.utils.parseEther(parseFloat(amountInput).toString());
             
             try {
-                // ১. APPROVE STEP (অনুমতি নেওয়ার ধাপ)
+                // 1. APPROVE STEP
                 if (actionType === 'supply' || actionType === 'repay') {
                     const tokenContract = new ethers.Contract(token, erc20ABI, signer);
                     console.log("Approving token spend...");
                     
-                    const approveTx = await tokenContract.approve(contractAddress, amount);
-                    alert("Approve সাবমিট হয়েছে। ব্লকচেইনে কনফার্ম হওয়া পর্যন্ত অপেক্ষা করুন...");
+                    const approveTx = await tokenContract.approve(contractAddress, amount, { gasLimit: 100000 });
+                    alert("Approval submitted. Please wait for confirmation on blockchain...");
                     await approveTx.wait();
                     console.log("Approve Confirmed!");
                     
-                    // মেটামাস্ককে প্রিপেয়ার করার জন্য ১ সেকেন্ডের একটি ছোট বিরতি
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                 }
                 
-                // ২. EXECUTE MAIN TRANSACTION STEP (আসল মেথড রান করার ধাপ)
+                // 2. EXECUTE MAIN TRANSACTION STEP
                 let tx;
-                alert(`এখন আসল ${actionType.toUpperCase()} ট্রানজেকশনটি শুরু হচ্ছে। মেটামাস্ক পপ-আপ চেক করুন...`);
+                alert(`Initiating ${actionType.toUpperCase()} transaction. Please check MetaMask popup...`);
+                
+                const txOptions = { gasLimit: 500000 }; 
                 
                 if (actionType === 'supply') {
-                    tx = await contract.supply(token, amount, { gasLimit: 250000 });
+                    tx = await contract.supply(token, amount, txOptions);
                 } else if (actionType === 'withdraw') {
-                    tx = await contract.withdraw(token, amount, { gasLimit: 250000 });
+                    tx = await contract.withdraw(token, amount, txOptions);
                 } else if (actionType === 'borrow') {
-                    tx = await contract.borrow(token, amount, { gasLimit: 250000 });
+                    tx = await contract.borrow(token, amount, txOptions);
                 } else if (actionType === 'repay') {
-                    tx = await contract.repay(token, amount, { gasLimit: 250000 });
+                    tx = await contract.repay(token, amount, txOptions);
                 }
                 
                 if(tx) {
-                    alert(`ট্রানজেকশন সাবমিট হয়েছে! Hash: ${tx.hash}\nকনফার্মেশনের জন্য অপেক্ষা করুন...`);
+                    alert(`Transaction submitted! Hash: ${tx.hash}\nWaiting for block confirmation...`);
                     await tx.wait();
-                    alert(`${actionType.toUpperCase()} সফল হয়েছে! 🎉`);
+                    alert(`${actionType.toUpperCase()} completed successfully! 🎉`);
                     
-                    // পোর্টফোলিও আপডেট
                     const address = await signer.getAddress();
                     updateUserBalances(address);
                     document.getElementById('actionAmount').value = ''; 
@@ -270,7 +269,15 @@
                 
             } catch (error) {
                 console.error("Action execution failed:", error);
-                alert(`Transaction failed! ${error.data ? error.data.message : error.message}`);
+                
+                let reason = error.message;
+                if (error.data && error.data.message) {
+                    reason = error.data.message;
+                } else if (error.reason) {
+                    reason = error.reason;
+                }
+                
+                alert(`Transaction Failed! Reason: ${reason}`);
             }
         }
     </script>
