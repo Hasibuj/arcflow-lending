@@ -92,11 +92,11 @@
                                 <tbody class="text-sm divide-y divide-gray-800">
                                     <tr>
                                         <td class="py-3.5 font-medium flex items-center space-x-2">
-                                            <span class="bg-purple-900/40 text-purple-400 p-1 rounded-full text-xs">ETH</span>
-                                            <span>Ethereum</span>
+                                            <span class="bg-purple-900/40 text-purple-400 p-1 rounded-full text-xs">TOKEN</span>
+                                            <span>Test Token</span>
                                         </td>
-                                        <td id="userSupplied" class="py-3.5">0.00 ETH</td>
-                                        <td id="userBorrowed" class="py-3.5 text-gray-400">0.00 ETH</td>
+                                        <td id="userSupplied" class="py-3.5">0.00 Token</td>
+                                        <td id="userBorrowed" class="py-3.5 text-gray-400">0.00 Token</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -110,8 +110,9 @@
                         <!-- Input Fields -->
                         <div class="space-y-3">
                             <div>
-                                <label class="text-xs text-gray-400">Token Address</label>
-                                <input id="tokenAddress" type="text" placeholder="0x..." class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00D2C4]">
+                                <label class="text-xs text-gray-400">Token Address (Auto-filled)</label>
+                                <!-- এখানে value এর ভেতর তোমার টোকেন অ্যাড্রেসটি ডিফল্ট করে দেওয়া হয়েছে -->
+                                <input id="tokenAddress" type="text" value="0x3600000000000000000000000000000000000000" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00D2C4]">
                             </div>
                             <div>
                                 <label class="text-xs text-gray-400">Amount</label>
@@ -140,19 +141,26 @@
         </div>
     </div>
 
-    <!-- 🌐 WEB3 INTERACTION SCRIPT (এখানেই জাভাস্ক্রিপ্ট আছে) -->
+    <!-- 🌐 WEB3 INTERACTION SCRIPT -->
     <script>
         let provider;
         let signer;
         let contract;
 
         const contractAddress = "0x46fD94DD6166903D038Ae1b8231Ea8c22209C84B"; 
+        
+        // Lending Pool Contract ABI
         const contractABI = [
             "function supply(address token, uint256 amount) external",
             "function withdraw(address token, uint256 amount) external",
             "function borrow(address token, uint256 amount) external",
             "function repay(address token, uint256 amount) external",
             "function positions(address, address) view returns (uint256 supplied, uint256 borrowed)"
+        ];
+
+        // Standard ERC20 ABI for Token Approval
+        const erc20ABI = [
+            "function approve(address spender, uint256 amount) external returns (bool)"
         ];
 
         async function connectWallet() {
@@ -179,13 +187,13 @@
 
         async function updateUserBalances(userAddress) {
             if (!contract) return;
-            const tokenAddr = document.getElementById('tokenAddress').value || "0x0000000000000000000000000000000000000000"; 
+            const tokenAddr = document.getElementById('tokenAddress').value; 
             try {
                 const position = await contract.positions(userAddress, tokenAddr);
                 document.getElementById('userSupplied').innerText = ethers.utils.formatEther(position.supplied) + " Token";
                 document.getElementById('userBorrowed').innerText = ethers.utils.formatEther(position.borrowed) + " Token";
             } catch (err) {
-                console.log("Could not fetch balances. Ensure token address is valid.");
+                console.log("Could not fetch balances.");
             }
         }
 
@@ -195,11 +203,20 @@
             const token = document.getElementById('tokenAddress').value;
             const amountInput = document.getElementById('actionAmount').value;
             
-            if (!token || !amountInput) return alert("Please enter both Token Address and Amount.");
+            if (!token || !amountInput) return alert("Please enter Amount.");
             
             const amount = ethers.utils.parseEther(amountInput);
 
             try {
+                // ⚡ AUTOMATIC ERC20 APPROVAL STEP FOR SUPPLY AND REPAY
+                if (actionType === 'supply' || actionType === 'repay') {
+                    const tokenContract = new ethers.Contract(token, erc20ABI, signer);
+                    alert("টোকেন ট্রান্সফারের অনুমতি দেওয়া হচ্ছে। প্রথমে মেটামাস্ক পপ-আপে Approve কনফার্ম করো...");
+                    const approveTx = await tokenContract.approve(contractAddress, amount);
+                    await approveTx.wait();
+                    alert("Approve সফল হয়েছে! এবার আসল ট্রানজেকশনটি সাবমিট হচ্ছে, মেটামাস্ক চেক করো...");
+                }
+
                 let tx;
                 if (actionType === 'supply') tx = await contract.supply(token, amount);
                 if (actionType === 'withdraw') tx = await contract.withdraw(token, amount);
