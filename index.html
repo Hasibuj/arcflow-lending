@@ -93,11 +93,11 @@
                                 <tbody class="text-sm divide-y divide-gray-800">
                                     <tr>
                                         <td class="py-3.5 font-medium flex items-center space-x-2">
-                                            <span class="bg-purple-900/40 text-purple-400 p-1 rounded-full text-xs">TOKEN</span>
-                                            <span>Test Token</span>
+                                            <span class="bg-blue-900/40 text-blue-400 p-1 rounded-full text-xs">USDC</span>
+                                            <span>Test USDC</span>
                                         </td>
-                                        <td id="userSupplied" class="py-3.5">0.00 Token</td>
-                                        <td id="userBorrowed" class="py-3.5 text-gray-400">0.00 Token</td>
+                                        <td id="userSupplied" class="py-3.5">0.0000 USDC</td>
+                                        <td id="userBorrowed" class="py-3.5 text-gray-400">0.0000 USDC</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -185,13 +185,16 @@
             
             try {
                 const position = await contract.positions(userAddress, tokenAddr);
-                const suppliedEth = ethers.utils.formatEther(position.supplied);
-                const borrowedEth = ethers.utils.formatEther(position.borrowed);
                 
-                document.getElementById('userSupplied').innerText = parseFloat(suppliedEth).toFixed(4) + " Token";
-                document.getElementById('userBorrowed').innerText = parseFloat(borrowedEth).toFixed(4) + " Token";
+                // FIXED: 6 Decimals for USDC
+                const suppliedEth = ethers.utils.formatUnits(position.supplied, 6);
+                const borrowedEth = ethers.utils.formatUnits(position.borrowed, 6);
                 
-                const tokenPrice = 10; 
+                document.getElementById('userSupplied').innerText = parseFloat(suppliedEth).toFixed(4) + " USDC";
+                document.getElementById('userBorrowed').innerText = parseFloat(borrowedEth).toFixed(4) + " USDC";
+                
+                // USDC Price is exactly $1
+                const tokenPrice = 1; 
                 const tvlUSD = parseFloat(suppliedEth) * tokenPrice;
                 const borrowsUSD = parseFloat(borrowedEth) * tokenPrice;
                 const liquidityUSD = tvlUSD - borrowsUSD;
@@ -225,7 +228,8 @@
                 return alert("Please enter a valid Amount.");
             }
             
-            const amount = ethers.utils.parseEther(parseFloat(amountInput).toString());
+            // FIXED: parseUnits for 6 Decimals (USDC)
+            const amount = ethers.utils.parseUnits(parseFloat(amountInput).toString(), 6);
             
             try {
                 // 1. APPROVE STEP
@@ -233,7 +237,7 @@
                     const tokenContract = new ethers.Contract(token, erc20ABI, signer);
                     console.log("Approving token spend...");
                     
-                    // Gas limit removed so MetaMask calculates gas correctly
+                    // Gas limit removed so MetaMask auto-estimates it
                     const approveTx = await tokenContract.approve(contractAddress, amount);
                     alert("Approval submitted. Please wait for confirmation on blockchain...");
                     await approveTx.wait();
