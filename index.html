@@ -228,12 +228,15 @@
         // TAB SWITCHING LOGIC
         function showSection(sectionId) {
             ['dashboardSection', 'positionsSection', 'marketsSection', 'settingsSection'].forEach(s => {
-                document.getElementById(s).classList.add('hidden');
+                const section = document.getElementById(s);
+                if(section) section.classList.add('hidden');
             });
-            document.getElementById(sectionId + 'Section').classList.remove('hidden');
+            const activeSection = document.getElementById(sectionId + 'Section');
+            if(activeSection) activeSection.classList.remove('hidden');
 
             ['dashboard', 'positions', 'markets', 'settings'].forEach(tab => {
                 const btn = document.getElementById(tab + 'Tab');
+                if (!btn) return;
                 if (tab === sectionId) {
                     btn.className = "flex flex-col items-center px-3 py-1.5 text-[#00D2C4] rounded-xl transition";
                 } else {
@@ -249,7 +252,8 @@
                     await provider.send("eth_requestAccounts", []);
                     signer = provider.getSigner();
                     const address = await signer.getAddress();
-                    document.getElementById('btnText').innerText = address.substring(0,6) + "..." + address.substring(38);
+                    const connectBtnText = document.getElementById('btnText');
+                    if(connectBtnText) connectBtnText.innerText = address.substring(0,6) + "..." + address.substring(38);
                     contract = new ethers.Contract(contractAddress, contractABI, signer);
                     updateUserBalances(address);
                 } catch (error) {
@@ -270,42 +274,56 @@
 
         async function updateUserBalances(userAddress) {
             if (!contract) return;
-            const tokenAddr = document.getElementById('tokenAddress').value;
+            const tokenAddrInput = document.getElementById('tokenAddress');
+            const tokenAddr = tokenAddrInput ? tokenAddrInput.value : '';
+            if(!tokenAddr) return;
+
             try {
                 const position = await contract.positions(userAddress, tokenAddr);
                 const suppliedEth = ethers.utils.formatUnits(position.supplied, 6);
                 const borrowedEth = ethers.utils.formatUnits(position.borrowed, 6);
                 
-                document.getElementById('userSupplied').innerText = parseFloat(suppliedEth).toFixed(4) + " USDC";
-                document.getElementById('userBorrowed').innerText = parseFloat(borrowedEth).toFixed(4) + " USDC";
+                const suppliedDisplay = document.getElementById('userSupplied');
+                const borrowedDisplay = document.getElementById('userBorrowed');
+                if(suppliedDisplay) suppliedDisplay.innerText = parseFloat(suppliedEth).toFixed(4) + " USDC";
+                if(borrowedDisplay) borrowedDisplay.innerText = parseFloat(borrowedEth).toFixed(4) + " USDC";
 
                 const tokenPrice = 1;
                 const tvlUSD = parseFloat(suppliedEth) * tokenPrice;
                 const borrowsUSD = parseFloat(borrowedEth) * tokenPrice;
                 const liquidityUSD = tvlUSD - borrowsUSD;
 
-                document.getElementById('tvlDisplay').innerText = `$${tvlUSD.toFixed(2)}`;
-                document.getElementById('borrowsDisplay').innerText = `$${borrowsUSD.toFixed(2)}`;
-                document.getElementById('liquidityDisplay').innerText = `$${liquidityUSD > 0 ? liquidityUSD.toFixed(2) : '0.00'}`;
+                const tvlDisplay = document.getElementById('tvlDisplay');
+                const borrowsDisplay = document.getElementById('borrowsDisplay');
+                const liquidityDisplay = document.getElementById('liquidityDisplay');
+                if(tvlDisplay) tvlDisplay.innerText = `$${tvlUSD.toFixed(2)}`;
+                if(borrowsDisplay) borrowsDisplay.innerText = `$${borrowsUSD.toFixed(2)}`;
+                if(liquidityDisplay) liquidityDisplay.innerText = `$${liquidityUSD > 0 ? liquidityUSD.toFixed(2) : '0.00'}`;
 
                 let liqPercent = tvlUSD > 0 ? Math.round((liquidityUSD / tvlUSD) * 100) : 0;
                 let borrowPercent = tvlUSD > 0 ? Math.round((borrowsUSD / tvlUSD) * 100) : 0;
 
-                document.getElementById('liqPercent').innerText = `${liqPercent}%`;
-                document.getElementById('liqBar').style.width = `${liqPercent}%`;
-                document.getElementById('borrowBar').style.width = `${borrowPercent}%`;
+                const liqPercentDisplay = document.getElementById('liqPercent');
+                const liqBarDisplay = document.getElementById('liqBar');
+                const borrowBarDisplay = document.getElementById('borrowBar');
+                if(liqPercentDisplay) liqPercentDisplay.innerText = `${liqPercent}%`;
+                if(liqBarDisplay) liqBarDisplay.style.width = `${liqPercent}%`;
+                if(borrowBarDisplay) borrowBarDisplay.style.width = `${borrowPercent}%`;
 
                 const maxBorrowLimit = tvlUSD * 0.8;
-                document.getElementById('borrowLimitDisplay').innerText = `$${maxBorrowLimit.toFixed(2)}`;
+                const borrowLimitDisplay = document.getElementById('borrowLimitDisplay');
+                if(borrowLimitDisplay) borrowLimitDisplay.innerText = `$${maxBorrowLimit.toFixed(2)}`;
                 
                 const healthDisplay = document.getElementById('healthFactorDisplay');
-                if (borrowsUSD > 0) {
-                    const healthFactor = maxBorrowLimit / borrowsUSD;
-                    healthDisplay.innerText = healthFactor.toFixed(2);
-                    healthDisplay.className = healthFactor < 1.1 ? "text-3xl font-bold mt-2 text-red-500" : (healthFactor < 1.5 ? "text-3xl font-bold mt-2 text-yellow-500" : "text-3xl font-bold mt-2 text-emerald-400");
-                } else {
-                    healthDisplay.innerText = "∞";
-                    healthDisplay.className = "text-3xl font-bold mt-2 text-emerald-400";
+                if (healthDisplay) {
+                    if (borrowsUSD > 0) {
+                        const healthFactor = maxBorrowLimit / borrowsUSD;
+                        healthDisplay.innerText = healthFactor.toFixed(2);
+                        healthDisplay.className = healthFactor < 1.1 ? "text-3xl font-bold mt-2 text-red-500" : (healthFactor < 1.5 ? "text-3xl font-bold mt-2 text-yellow-500" : "text-3xl font-bold mt-2 text-emerald-400");
+                    } else {
+                        healthDisplay.innerText = "∞";
+                        healthDisplay.className = "text-3xl font-bold mt-2 text-emerald-400";
+                    }
                 }
             } catch (err) {
                 console.error("Could not fetch balances from blockchain:", err);
@@ -314,12 +332,14 @@
 
         async function executeAction(actionType) {
             if (!contract) return alert("Please connect wallet first!");
-            const token = document.getElementById('tokenAddress').value;
-            const amountInput = document.getElementById('actionAmount').value;
-            if (!token || !amountInput || parseFloat(amountInput) <= 0) {
+            const tokenAddrInput = document.getElementById('tokenAddress');
+            const token = tokenAddrInput ? tokenAddrInput.value : '';
+            const amountInput = document.getElementById('actionAmount');
+            const amountInputValue = amountInput ? amountInput.value : '';
+            if (!token || !amountInputValue || parseFloat(amountInputValue) <= 0) {
                 return alert("Please enter a valid Amount.");
             }
-            const amount = ethers.utils.parseUnits(parseFloat(amountInput).toString(), 6);
+            const amount = ethers.utils.parseUnits(parseFloat(amountInputValue).toString(), 6);
 
             try {
                 if (actionType === 'supply' || actionType === 'repay') {
@@ -341,7 +361,7 @@
                     alert(`${actionType.toUpperCase()} completed successfully! 🎉`);
                     const address = await signer.getAddress();
                     updateUserBalances(address);
-                    document.getElementById('actionAmount').value = '';
+                    if(amountInput) amountInput.value = '';
                 }
             } catch (error) {
                 console.error("Action execution failed:", error);
