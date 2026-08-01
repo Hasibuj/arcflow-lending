@@ -42,7 +42,8 @@
         <main id="dashboardSection" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-[#161B26] border border-gray-800/80 p-5 rounded-2xl">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Total Value Locked (TVL)</p> <h3 id="tvlDisplay" class="text-2xl md:text-3xl font-bold mt-2">$0.00</h3>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Total Value Locked (TVL)</p>
+                    <h3 id="tvlDisplay" class="text-2xl md:text-3xl font-bold mt-2">$0.00</h3>
                 </div>
                 <div class="bg-[#161B26] border border-gray-800/80 p-5 rounded-2xl">
                     <div class="flex justify-between items-center">
@@ -202,7 +203,12 @@
 
     <!-- 🌐 WEB3 INTERACTION SCRIPT -->
     <script>
-        lucide.createIcons();
+        // Page load হওয়ার পর নিরাপদভাবে Icon তৈরি করার জন্য
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
 
         let provider;
         let signer;
