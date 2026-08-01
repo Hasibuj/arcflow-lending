@@ -4,165 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arcflow Lending Dashboard</title>
-    <!-- Tailwind CSS for Modern UI -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Ethers.js for Web3 Smart Contract Integration -->
+    <!-- Ethers.js for Web3 Integration -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-[#0F141C] text-white font-sans antialiased">
-    <div class="flex h-screen">
-        <!-- 📌 SIDEBAR -->
-        <div class="w-64 bg-[#161B22] border-r border-gray-800 p-6 flex flex-col justify-between">
-            <div>
-                <div class="text-xl font-bold tracking-wider text-[#00D2C4] mb-10">
-                    ARCFLOW <span class="text-white font-light">LENDING</span>
-                </div>
-                <nav class="space-y-4">
-                    <button id="dashboardTab" onclick="showSection('dashboard')" class="flex items-center space-x-3 px-4 py-2.5 bg-[#1A212D] text-[#00D2C4] rounded-lg font-medium transition w-full text-left">
-                        <span>📊</span> <span>Dashboard</span>
-                    </button>
-                    <button id="positionsTab" onclick="showSection('positions')" class="flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-[#1A212D] hover:text-white rounded-lg transition w-full text-left">
-                        <span>💼</span> <span>Positions</span>
-                    </button>
-                    <button id="tokenTab" onclick="showSection('token')" class="flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-[#1A212D] hover:text-white rounded-lg transition w-full text-left">
-                        <span>⚙️</span> <span>Token Management</span>
-                    </button>
-                </nav>
-            </div>
-            <div class="text-xs text-gray-500 text-center border-t border-gray-800 pt-4">
-                v1.0.0 Prototyping
-            </div>
+<body class="bg-[#0B0E14] text-white font-sans antialiased min-h-screen flex flex-col justify-between pb-24 md:pb-0">
+
+    <!-- 🌐 HEADER / TOP BAR -->
+    <header class="border-b border-gray-800/60 px-6 py-4 flex justify-between items-center bg-[#111622]/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="flex items-center space-x-2">
+            <span class="text-xl font-bold tracking-wider text-[#00D2C4]">ARCFLOW</span>
+            <span class="text-xs uppercase bg-[#00D2C4]/10 text-[#00D2C4] px-2 py-0.5 rounded font-mono">Lending</span>
+        </div>
+        
+        <!-- RainbowKit Styled Connect Wallet Button -->
+        <button id="connectBtn" onclick="connectWallet()" class="flex items-center space-x-2 bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 p-[2px] rounded-xl transition hover:scale-105">
+            <span class="bg-[#161B26] px-4 py-2 rounded-[10px] flex items-center space-x-2 text-sm font-semibold">
+                <i data-lucide="wallet" class="w-4 h-4 text-[#00D2C4]"></i>
+                <span id="btnText">Connect Wallet</span>
+            </span>
+        </button>
+    </header>
+
+    <!-- 📊 MAIN CONTAINER -->
+    <div class="max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6 flex-1">
+        
+        <!-- WELCOME BANNER -->
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold">Welcome to <span class="text-[#00D2C4]">Arcflow Lending Pool</span></h1>
+            <p class="text-sm text-gray-400 mt-1">Manage your crypto assets, earn interest, and borrow seamlessly.</p>
         </div>
 
-        <!-- 🚀 MAIN CONTENT AREA -->
-        <div class="flex-1 flex flex-col overflow-y-auto">
-            <!-- HEADER -->
-            <header class="bg-[#161B22] border-b border-gray-800 px-8 py-4 flex justify-between items-center">
-                <div class="text-sm text-gray-400">Welcome to Arcflow Lending Pool</div>
-                <button id="connectBtn" onclick="connectWallet()" class="bg-[#00D2C4] hover:bg-[#00b0a4] text-[#0F141C] font-semibold px-5 py-2 rounded-lg transition shadow-lg shadow-[#00D2C4]/20">
-                    Connect Wallet
-                </button>
-            </header>
-
-            <!-- 📊 DASHBOARD SECTION -->
-            <main id="dashboardSection" class="p-8 space-y-8">
-                <!-- 📦 TOP METRIC CARDS -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider">Total Value Locked (TVL)</p>
-                            <h3 id="tvlDisplay" class="text-3xl font-bold mt-1">$0.00</h3>
-                        </div>
-                        <span class="text-2xl text-[#00D2C4]">📈</span>
+        <!-- 📊 SECTION 1: DASHBOARD (Overview) -->
+        <main id="dashboardSection" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-[#161B26] border border-gray-800/80 p-5 rounded-2xl">
+                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Total Value Locked (TVL)</p> <h3 id="tvlDisplay" class="text-2xl md:text-3xl font-bold mt-2">$0.00</h3>
+                </div>
+                <div class="bg-[#161B26] border border-gray-800/80 p-5 rounded-2xl">
+                    <div class="flex justify-between items-center">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Available Liquidity</p>
+                        <span id="liqPercent" class="text-xs text-[#00D2C4] font-mono">0%</span>
                     </div>
-
-                    <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
-                        <div class="flex justify-between">
-                            <p class="text-xs text-gray-400 uppercase tracking-wider">Available Liquidity</p>
-                            <span id="liqPercent" class="text-xs text-[#00D2C4]">0% Full</span>
-                        </div>
-                        <h3 id="liquidityDisplay" class="text-3xl font-bold mt-1">$0.00</h3>
-                        <div class="w-full bg-gray-800 h-2 rounded-full mt-3 overflow-hidden">
-                            <div id="liqBar" class="bg-[#00D2C4] h-full" style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
-                        <p class="text-xs text-gray-400 uppercase tracking-wider">Active Borrows</p>
-                        <h3 id="borrowsDisplay" class="text-3xl font-bold mt-1">$0.00</h3>
-                        <div class="w-full bg-gray-800 h-2 rounded-full mt-3 overflow-hidden">
-                            <div id="borrowBar" class="bg-blue-500 h-full" style="width: 0%"></div>
-                        </div>
+                    <h3 id="liquidityDisplay" class="text-2xl md:text-3xl font-bold mt-2">$0.00</h3>
+                    <div class="w-full bg-gray-800/50 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div id="liqBar" class="bg-[#00D2C4] h-full" style="width: 0%"></div>
                     </div>
                 </div>
+                <div class="bg-[#161B26] border border-gray-800/80 p-5 rounded-2xl">
+                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Active Borrows</p>
+                    <h3 id="borrowsDisplay" class="text-2xl md:text-3xl font-bold mt-2">$0.00</h3>
+                    <div class="w-full bg-gray-800/50 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div id="borrowBar" class="bg-blue-500 h-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
 
-                <!-- PORTFOLIO & QUICK ACTIONS -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2 bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
-                        <h3 class="text-lg font-semibold mb-4 text-gray-200">Your Portfolio (User Positions)</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="border-b border-gray-800 text-gray-400 text-xs uppercase">
-                                        <th class="pb-3">Asset</th>
-                                        <th class="pb-3">Supplied Balance</th>
-                                        <th class="pb-3">Borrowed Balance</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm divide-y divide-gray-800">
-                                    <tr>
-                                        <td class="py-3.5 font-medium flex items-center space-x-2">
-                                            <span class="bg-blue-900/40 text-blue-400 p-1 rounded-full text-xs">USDC</span>
-                                            <span id="assetNameDisplay">Test USDC</span>
-                                        </td>
-                                        <td id="userSupplied" class="py-3.5">0.0000 USDC</td>
-                                        <td id="userBorrowed" class="py-3.5 text-gray-400">0.0000 USDC</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+            <!-- PORTFOLIO & QUICK ACTIONS -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- PORTFOLIO CARD -->
+                <div class="lg:col-span-2 bg-[#161B26] border border-gray-800/80 p-6 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold">Your Portfolio</h3>
+                        <span class="text-xs text-gray-400 bg-gray-800/60 px-3 py-1 rounded-full">Active Positions</span>
                     </div>
 
-                    <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl space-y-4">
-                        <h3 class="text-lg font-semibold text-gray-200">Quick Actions Panel</h3>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="text-xs text-gray-400">Amount</label>
-                                <input id="actionAmount" type="number" step="any" placeholder="0.0" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00D2C4]">
+                    <div class="space-y-3">
+                        <!-- Token Item: USDC -->
+                        <div class="bg-[#1C2333] border border-gray-800 p-4 rounded-xl space-y-3">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
+                                        $
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-sm" id="assetNameDisplay">USDC (Test USDC)</div>
+                                        <div class="text-xs text-gray-400">USD Stablecoin</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-400">Net APY</div>
+                                    <div class="text-xs font-semibold text-emerald-400">3.8% Earn / 5.2% Pay</div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-gray-800/60 text-xs">
+                                <div>
+                                    <span class="text-gray-400 block">Supplied</span>
+                                    <span id="userSupplied" class="font-medium text-white">0.0000 USDC</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400 block">Borrowed</span>
+                                    <span id="userBorrowed" class="font-medium text-white">0.0000 USDC</span>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-gray-400 block mb-1">Collateral</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#00D2C4]"></div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3 pt-2">
-                            <button onclick="executeAction('supply')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">↓ SUPPLY</button>
-                            <button onclick="executeAction('withdraw')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">↑ WITHDRAW</button>
-                            <button onclick="executeAction('borrow')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">↗ BORROW</button>
-                            <button onclick="executeAction('repay')" class="bg-gray-800 hover:bg-[#1A212D] hover:border-[#00D2C4] border border-transparent text-sm py-3 rounded-lg font-medium transition text-center">✓ REPAY</button>
-                        </div>
                     </div>
                 </div>
-            </main>
 
-            <!-- 💼 POSITIONS SECTION (HIDDEN BY DEFAULT) -->
-            <main id="positionsSection" class="p-8 space-y-8 hidden">
-                <h2 class="text-2xl font-bold text-gray-200">Detailed User Positions & Risk Management</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
-                        <p class="text-xs text-gray-400 uppercase tracking-wider">Account Health Factor</p>
-                        <h3 id="healthFactorDisplay" class="text-3xl font-bold mt-1 text-green-400">∞</h3>
-                        <p class="text-xs text-gray-500 mt-2">Liquidation occurs if Health Factor drops below 1.0</p>
+                <!-- QUICK ACTIONS PANEL -->
+                <div class="bg-[#161B26] border border-gray-800/80 p-6 rounded-2xl space-y-4">
+                    <h3 class="text-lg font-bold">Quick Actions Panel</h3>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Amount</label>
+                        <input id="actionAmount" type="number" step="any" placeholder="0.0" class="w-full bg-[#1C2333] border border-gray-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#00D2C4] transition">
                     </div>
-                    <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl">
-                        <p class="text-xs text-gray-400 uppercase tracking-wider">Max Borrow Limit (80% Collateral)</p>
-                        <h3 id="borrowLimitDisplay" class="text-3xl font-bold mt-1">$0.00</h3>
-                    </div>
-                </div>
-            </main>
-
-            <!-- ⚙️ TOKEN MANAGEMENT SECTION (HIDDEN BY DEFAULT) -->
-            <main id="tokenSection" class="p-8 space-y-8 hidden">
-                <h2 class="text-2xl font-bold text-gray-200">Token Configuration Management</h2>
-                <div class="bg-[#1A212D] border border-gray-800 p-6 rounded-xl max-w-2xl">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-300">Active Token Settings</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="text-xs text-gray-400 block mb-1">Target ERC20 Token Address (6 Decimals Supported)</label>
-                            <input id="tokenAddress" type="text" value="0x3600000000000000000000000000000000000000" class="w-full bg-[#161B22] border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-[#00D2C4]">
-                        </div>
-                        <button onclick="handleTokenUpdate()" class="bg-[#00D2C4] hover:bg-[#00b0a4] text-[#0F141C] font-semibold px-4 py-2 rounded-lg text-sm transition">
-                            Update & Refresh Pool Data
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <button onclick="executeAction('supply')" class="flex flex-col items-center justify-center p-3 bg-[#1C2333] hover:bg-[#222B3E] border border-gray-800 rounded-xl transition space-y-1">
+                            <i data-lucide="download" class="w-4 h-4 text-[#00D2C4]"></i>
+                            <span class="text-xs font-semibold">SUPPLY</span>
+                        </button>
+                        <button onclick="executeAction('withdraw')" class="flex flex-col items-center justify-center p-3 bg-[#1C2333] hover:bg-[#222B3E] border border-gray-800 rounded-xl transition space-y-1">
+                            <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i>
+                            <span class="text-xs font-semibold">WITHDRAW</span>
+                        </button>
+                        <button onclick="executeAction('borrow')" class="flex flex-col items-center justify-center p-3 bg-[#1C2333] hover:bg-[#222B3E] border border-gray-800 rounded-xl transition space-y-1">
+                            <i data-lucide="external-link" class="w-4 h-4 text-blue-400"></i>
+                            <span class="text-xs font-semibold">BORROW</span>
+                        </button>
+                        <button onclick="executeAction('repay')" class="flex flex-col items-center justify-center p-3 bg-[#1C2333] hover:bg-[#222B3E] border border-gray-800 rounded-xl transition space-y-1">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                            <span class="text-xs font-semibold">REPAY</span>
                         </button>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </main>
+
+        <!-- 💼 SECTION 2: POSITIONS -->
+        <main id="positionsSection" class="space-y-6 hidden">
+            <h2 class="text-xl font-bold">Positions & Risk Management</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-[#161B26] border border-gray-800/80 p-6 rounded-2xl">
+                    <p class="text-xs text-gray-400 uppercase tracking-wider">Account Health Factor</p>
+                    <h3 id="healthFactorDisplay" class="text-3xl font-bold mt-2 text-emerald-400">∞</h3>
+                    <p class="text-xs text-gray-500 mt-2">Liquidation occurs if Health Factor drops below 1.0</p>
+                </div>
+                <div class="bg-[#161B26] border border-gray-800/80 p-6 rounded-2xl">
+                    <p class="text-xs text-gray-400 uppercase tracking-wider">Max Borrow Limit (80% LTV)</p>
+                    <h3 id="borrowLimitDisplay" class="text-3xl font-bold mt-2">$0.00</h3>
+                </div>
+            </div>
+        </main>
+
+        <!-- 📈 SECTION 3: MARKETS -->
+        <main id="marketsSection" class="space-y-6 hidden">
+            <h2 class="text-xl font-bold">Lending Markets</h2>
+            <div class="bg-[#161B26] border border-gray-800/80 p-6 rounded-2xl text-center text-gray-400 text-sm">
+                Live market dynamics and interest rate curves will be displayed here.
+            </div>
+        </main>
+
+        <!-- ⚙️ SECTION 4: SETTINGS -->
+        <main id="settingsSection" class="space-y-6 hidden">
+            <h2 class="text-xl font-bold">Token Configuration Settings</h2>
+            <div class="bg-[#161B26] border border-gray-800/80 p-6 rounded-2xl max-w-xl space-y-4">
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Target ERC20 Token Address</label>
+                    <input id="tokenAddress" type="text" value="0x3600000000000000000000000000000000000000" class="w-full bg-[#1C2333] border border-gray-800 rounded-xl px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-[#00D2C4]">
+                </div>
+                <button onclick="handleTokenUpdate()" class="bg-[#00D2C4] text-[#0B0E14] font-semibold px-4 py-2 rounded-xl text-sm transition hover:bg-[#00b0a4]">
+                    Update Token
+                </button>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- 📱 FLOATING NAVIGATION BAR (Bottom Nav) -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#161B26]/90 backdrop-blur-lg border border-gray-800 px-4 py-2 rounded-2xl flex items-center space-x-2 md:space-x-6 shadow-2xl z-50">
+        <button id="dashboardTab" onclick="showSection('dashboard')" class="flex flex-col items-center px-3 py-1.5 text-[#00D2C4] rounded-xl transition">
+            <i data-lucide="gauge" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium mt-1">Dashboard</span>
+        </button>
+        <button id="positionsTab" onclick="showSection('positions')" class="flex flex-col items-center px-3 py-1.5 text-gray-400 hover:text-white rounded-xl transition">
+            <i data-lucide="briefcase" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium mt-1">Positions</span>
+        </button>
+        <button id="marketsTab" onclick="showSection('markets')" class="flex flex-col items-center px-3 py-1.5 text-gray-400 hover:text-white rounded-xl transition">
+            <i data-lucide="trending-up" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium mt-1">Markets</span>
+        </button>
+        <button id="settingsTab" onclick="showSection('settings')" class="flex flex-col items-center px-3 py-1.5 text-gray-400 hover:text-white rounded-xl transition">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium mt-1">Settings</span>
+        </button>
     </div>
 
     <!-- 🌐 WEB3 INTERACTION SCRIPT -->
     <script>
+        lucide.createIcons();
+
         let provider;
         let signer;
         let contract;
         const contractAddress = "0x46fD94DD6166903D038Ae1b8231Ea8c22209C84B";
-
         const contractABI = [
             "function supply(address token, uint256 amount) external",
             "function withdraw(address token, uint256 amount) external",
@@ -170,26 +215,23 @@
             "function repay(address token, uint256 amount) external",
             "function positions(address, address) view returns (uint256 supplied, uint256 borrowed)"
         ];
-
         const erc20ABI = [
             "function approve(address spender, uint256 amount) external returns (bool)"
         ];
 
-        // 🔄 TAB SWITCHING LOGIC
+        // TAB SWITCHING LOGIC
         function showSection(sectionId) {
-            document.getElementById('dashboardSection').classList.add('hidden');
-            document.getElementById('positionsSection').classList.add('hidden');
-            document.getElementById('tokenSection').classList.add('hidden');
-            
+            ['dashboardSection', 'positionsSection', 'marketsSection', 'settingsSection'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+            });
             document.getElementById(sectionId + 'Section').classList.remove('hidden');
-            
-            const tabs = ['dashboard', 'positions', 'token'];
-            tabs.forEach(tab => {
+
+            ['dashboard', 'positions', 'markets', 'settings'].forEach(tab => {
                 const btn = document.getElementById(tab + 'Tab');
                 if (tab === sectionId) {
-                    btn.className = "flex items-center space-x-3 px-4 py-2.5 bg-[#1A212D] text-[#00D2C4] rounded-lg font-medium transition w-full text-left";
+                    btn.className = "flex flex-col items-center px-3 py-1.5 text-[#00D2C4] rounded-xl transition";
                 } else {
-                    btn.className = "flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-[#1A212D] hover:text-white rounded-lg transition w-full text-left";
+                    btn.className = "flex flex-col items-center px-3 py-1.5 text-gray-400 hover:text-white rounded-xl transition";
                 }
             });
         }
@@ -201,11 +243,7 @@
                     await provider.send("eth_requestAccounts", []);
                     signer = provider.getSigner();
                     const address = await signer.getAddress();
-                    
-                    document.getElementById('connectBtn').innerText = address.substring(0,6) + "..." + address.substring(38);
-                    document.getElementById('connectBtn').classList.replace('bg-[#00D2C4]', 'bg-gray-800');
-                    document.getElementById('connectBtn').classList.add('text-gray-300');
-                    
+                    document.getElementById('btnText').innerText = address.substring(0,6) + "..." + address.substring(38);
                     contract = new ethers.Contract(contractAddress, contractABI, signer);
                     updateUserBalances(address);
                 } catch (error) {
@@ -227,56 +265,42 @@
         async function updateUserBalances(userAddress) {
             if (!contract) return;
             const tokenAddr = document.getElementById('tokenAddress').value;
-            
             try {
                 const position = await contract.positions(userAddress, tokenAddr);
-                
                 const suppliedEth = ethers.utils.formatUnits(position.supplied, 6);
                 const borrowedEth = ethers.utils.formatUnits(position.borrowed, 6);
                 
                 document.getElementById('userSupplied').innerText = parseFloat(suppliedEth).toFixed(4) + " USDC";
                 document.getElementById('userBorrowed').innerText = parseFloat(borrowedEth).toFixed(4) + " USDC";
-                
-                const tokenPrice = 1; 
+
+                const tokenPrice = 1;
                 const tvlUSD = parseFloat(suppliedEth) * tokenPrice;
                 const borrowsUSD = parseFloat(borrowedEth) * tokenPrice;
                 const liquidityUSD = tvlUSD - borrowsUSD;
-                
+
                 document.getElementById('tvlDisplay').innerText = `$${tvlUSD.toFixed(2)}`;
                 document.getElementById('borrowsDisplay').innerText = `$${borrowsUSD.toFixed(2)}`;
                 document.getElementById('liquidityDisplay').innerText = `$${liquidityUSD > 0 ? liquidityUSD.toFixed(2) : '0.00'}`;
-                
-                let liqPercent = 0;
-                let borrowPercent = 0;
-                if (tvlUSD > 0) {
-                    liqPercent = Math.round((liquidityUSD / tvlUSD) * 100);
-                    borrowPercent = Math.round((borrowsUSD / tvlUSD) * 100);
-                }
-                
-                document.getElementById('liqPercent').innerText = `${liqPercent}% Full`;
+
+                let liqPercent = tvlUSD > 0 ? Math.round((liquidityUSD / tvlUSD) * 100) : 0;
+                let borrowPercent = tvlUSD > 0 ? Math.round((borrowsUSD / tvlUSD) * 100) : 0;
+
+                document.getElementById('liqPercent').innerText = `${liqPercent}%`;
                 document.getElementById('liqBar').style.width = `${liqPercent}%`;
                 document.getElementById('borrowBar').style.width = `${borrowPercent}%`;
 
-                // 📈 POSITIONS RISK MANAGEMENT CALCULATIONS (80% LTV)
                 const maxBorrowLimit = tvlUSD * 0.8;
                 document.getElementById('borrowLimitDisplay').innerText = `$${maxBorrowLimit.toFixed(2)}`;
-
+                
                 const healthDisplay = document.getElementById('healthFactorDisplay');
                 if (borrowsUSD > 0) {
                     const healthFactor = maxBorrowLimit / borrowsUSD;
                     healthDisplay.innerText = healthFactor.toFixed(2);
-                    if (healthFactor < 1.1) {
-                        healthDisplay.className = "text-3xl font-bold mt-1 text-red-500";
-                    } else if (healthFactor < 1.5) {
-                        healthDisplay.className = "text-3xl font-bold mt-1 text-yellow-500";
-                    } else {
-                        healthDisplay.className = "text-3xl font-bold mt-1 text-green-400";
-                    }
+                    healthDisplay.className = healthFactor < 1.1 ? "text-3xl font-bold mt-2 text-red-500" : (healthFactor < 1.5 ? "text-3xl font-bold mt-2 text-yellow-500" : "text-3xl font-bold mt-2 text-emerald-400");
                 } else {
                     healthDisplay.innerText = "∞";
-                    healthDisplay.className = "text-3xl font-bold mt-1 text-green-400";
+                    healthDisplay.className = "text-3xl font-bold mt-2 text-emerald-400";
                 }
-                
             } catch (err) {
                 console.error("Could not fetch balances from blockchain:", err);
             }
@@ -286,58 +310,36 @@
             if (!contract) return alert("Please connect wallet first!");
             const token = document.getElementById('tokenAddress').value;
             const amountInput = document.getElementById('actionAmount').value;
-            
             if (!token || !amountInput || parseFloat(amountInput) <= 0) {
                 return alert("Please enter a valid Amount.");
             }
-            
             const amount = ethers.utils.parseUnits(parseFloat(amountInput).toString(), 6);
-            
+
             try {
                 if (actionType === 'supply' || actionType === 'repay') {
                     const tokenContract = new ethers.Contract(token, erc20ABI, signer);
-                    console.log("Approving token spend...");
-                    
                     const approveTx = await tokenContract.approve(contractAddress, amount);
                     alert("Approval submitted. Please wait for confirmation on blockchain...");
                     await approveTx.wait();
-                    console.log("Approve Confirmed!");
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1500));
                 }
-                
+
                 let tx;
-                alert(`Initiating ${actionType.toUpperCase()} transaction. Please check MetaMask popup...`);
-                
-                if (actionType === 'supply') {
-                    tx = await contract.supply(token, amount);
-                } else if (actionType === 'withdraw') {
-                    tx = await contract.withdraw(token, amount);
-                } else if (actionType === 'borrow') {
-                    tx = await contract.borrow(token, amount);
-                } else if (actionType === 'repay') {
-                    tx = await contract.repay(token, amount);
-                }
-                
+                if (actionType === 'supply') tx = await contract.supply(token, amount);
+                else if (actionType === 'withdraw') tx = await contract.withdraw(token, amount);
+                else if (actionType === 'borrow') tx = await contract.borrow(token, amount);
+                else if (actionType === 'repay') tx = await contract.repay(token, amount);
+
                 if(tx) {
-                    alert(`Transaction submitted! Hash: ${tx.hash}\nWaiting for block confirmation...`);
+                    alert(`Transaction submitted! Hash: ${tx.hash}`);
                     await tx.wait();
                     alert(`${actionType.toUpperCase()} completed successfully! 🎉`);
-                    
                     const address = await signer.getAddress();
                     updateUserBalances(address);
-                    document.getElementById('actionAmount').value = ''; 
+                    document.getElementById('actionAmount').value = '';
                 }
-                
             } catch (error) {
                 console.error("Action execution failed:", error);
-                let reason = error.message;
-                if (error.data && error.data.message) {
-                    reason = error.data.message;
-                } else if (error.reason) {
-                    reason = error.reason;
-                }
-                alert(`Transaction Failed! Reason: ${reason}`);
+                alert(`Transaction Failed! ${error.reason || error.message}`);
             }
         }
     </script>
